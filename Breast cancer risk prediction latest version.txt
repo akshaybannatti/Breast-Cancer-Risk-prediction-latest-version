@@ -1,0 +1,73 @@
+# Breast Cancer Risk Prediction
+
+# Import necessary libraries
+import pandas as pd
+import numpy as np
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report, confusion_matrix, accuracy_score
+
+# Load the dataset
+# Dataset can be from sklearn or a CSV file
+from sklearn.datasets import load_breast_cancer
+
+# Load breast cancer dataset
+cancer_data = load_breast_cancer()
+
+# Create a DataFrame from the dataset
+data = pd.DataFrame(cancer_data.data, columns=cancer_data.feature_names)
+data['target'] = cancer_data.target
+
+# Display dataset info
+data.info()
+print("\nData Preview:")
+print(data.head())
+
+# Exploratory Data Analysis
+sns.pairplot(data, hue='target', palette='coolwarm', markers=['o', 's'], diag_kind='kde')
+plt.show()
+
+# Check for missing values
+print("\nMissing Values:")
+print(data.isnull().sum())
+
+# Splitting the dataset into features and target
+X = data.drop(['target'], axis=1)
+y = data['target']
+
+# Split the dataset into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# Feature Scaling
+scaler = StandardScaler()
+X_train = scaler.fit_transform(X_train)
+X_test = scaler.transform(X_test)
+
+# Model Training - Random Forest Classifier
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+model.fit(X_train, y_train)
+
+# Model Evaluation
+predictions = model.predict(X_test)
+print("\nConfusion Matrix:")
+print(confusion_matrix(y_test, predictions))
+print("\nClassification Report:")
+print(classification_report(y_test, predictions))
+print("\nAccuracy Score:")
+print(accuracy_score(y_test, predictions))
+
+# Feature Importance
+feature_importances = pd.Series(model.feature_importances_, index=cancer_data.feature_names).sort_values(ascending=False)
+plt.figure(figsize=(10, 6))
+feature_importances.plot(kind='bar', color='teal')
+plt.title('Feature Importance')
+plt.show()
+
+# Save the model (optional for deployment)
+import joblib
+joblib.dump(model, 'breast_cancer_risk_model.pkl')
+
+print("Model training complete. You can use 'breast_cancer_risk_model.pkl' for predictions.")
